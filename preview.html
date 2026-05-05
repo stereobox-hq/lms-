@@ -4,19 +4,179 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Payroll System – Preview</title>
-  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { font-family: 'Segoe UI', system-ui, sans-serif; }
-    .tab { cursor: pointer; transition: all .15s; }
-    .tab.active { background: #1e3a8a; color: white; }
-    .tab:not(.active):hover { background: #eff6ff; }
-    tr.editing td { background: #fefce8; }
+    /* ── reset & base ───────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+           background: #f9fafb; color: #111827; min-height: 100vh; }
+    button { cursor: pointer; background: none; border: none; font: inherit; }
+    input, select { font: inherit; }
+    table { border-collapse: collapse; }
+
+    /* ── layout ─────────────────────────────────────────────────────── */
+    .min-h-screen  { min-height: 100vh; }
+    .max-w-7xl     { max-width: 80rem; }
+    .mx-auto       { margin-left: auto; margin-right: auto; }
+    .w-full        { width: 100%; }
+    .w-24          { width: 6rem; }
+    .min-w-full    { min-width: 100%; }
+    .h-16          { height: 4rem; }
+    .h-full        { height: 100%; }
+    .h-1\.5        { height: 0.375rem; }
+    .overflow-hidden   { overflow: hidden; }
+    .overflow-x-auto   { overflow-x: auto; }
+    .cursor-pointer    { cursor: pointer; }
+
+    /* ── spacing ────────────────────────────────────────────────────── */
+    .px-4  { padding-left: 1rem;    padding-right: 1rem; }
+    .px-3  { padding-left: 0.75rem; padding-right: 0.75rem; }
+    .px-2  { padding-left: 0.5rem;  padding-right: 0.5rem; }
+    .py-8  { padding-top: 2rem;     padding-bottom: 2rem; }
+    .py-3  { padding-top: 0.75rem;  padding-bottom: 0.75rem; }
+    .py-2  { padding-top: 0.5rem;   padding-bottom: 0.5rem; }
+    .py-1  { padding-top: 0.25rem;  padding-bottom: 0.25rem; }
+    .p-5   { padding: 1.25rem; }
+    .p-4   { padding: 1rem; }
+    .p-3   { padding: 0.75rem; }
+    .mb-8  { margin-bottom: 2rem; }
+    .mb-6  { margin-bottom: 1.5rem; }
+    .mb-5  { margin-bottom: 1.25rem; }
+    .mb-4  { margin-bottom: 1rem; }
+    .mb-3  { margin-bottom: 0.75rem; }
+    .mt-3  { margin-top: 0.75rem; }
+    .mt-1  { margin-top: 0.25rem; }
+    .mr-2  { margin-right: 0.5rem; }
+    .gap-6 { gap: 1.5rem; }
+    .gap-4 { gap: 1rem; }
+    .gap-3 { gap: 0.75rem; }
+    .space-y-0\.5 > * + * { margin-top: 0.125rem; }
+
+    /* ── flexbox ────────────────────────────────────────────────────── */
+    .flex           { display: flex; }
+    .flex-wrap      { flex-wrap: wrap; }
+    .items-center   { align-items: center; }
+    .items-start    { align-items: flex-start; }
+    .justify-between { justify-content: space-between; }
+    .shrink-0       { flex-shrink: 0; }
+
+    /* ── grid ───────────────────────────────────────────────────────── */
+    .grid           { display: grid; }
+    .grid-cols-2    { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .gap-4          { gap: 1rem; }
+    @media (min-width: 640px)  { .sm\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+                                  .sm\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+    @media (min-width: 1024px) { .lg\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+    /* ── typography ─────────────────────────────────────────────────── */
+    .text-2xl   { font-size: 1.5rem;   line-height: 2rem; }
+    .text-xl    { font-size: 1.25rem;  line-height: 1.75rem; }
+    .text-lg    { font-size: 1.125rem; line-height: 1.75rem; }
+    .text-base  { font-size: 1rem;     line-height: 1.5rem; }
+    .text-sm    { font-size: 0.875rem; line-height: 1.25rem; }
+    .text-xs    { font-size: 0.75rem;  line-height: 1rem; }
+    .font-bold      { font-weight: 700; }
+    .font-semibold  { font-weight: 600; }
+    .font-medium    { font-weight: 500; }
+    .font-mono      { font-family: ui-monospace, 'Cascadia Code', 'Courier New', monospace; }
+    .uppercase      { text-transform: uppercase; }
+    .tracking-tight { letter-spacing: -0.025em; }
+    .tracking-wide  { letter-spacing: 0.025em; }
+    .text-left      { text-align: left; }
+    .text-right     { text-align: right; }
+    .text-center    { text-align: center; }
+    .underline      { text-decoration: underline; }
+    a, .hover\:underline:hover { text-decoration: underline; }
+
+    /* ── colors – text ──────────────────────────────────────────────── */
+    .text-white      { color: #ffffff; }
+    .text-gray-900   { color: #111827; }
+    .text-gray-700   { color: #374151; }
+    .text-gray-600   { color: #4b5563; }
+    .text-gray-500   { color: #6b7280; }
+    .text-gray-400   { color: #9ca3af; }
+    .text-blue-800   { color: #1e40af; }
+    .text-blue-700   { color: #1d4ed8; }
+    .text-blue-600   { color: #2563eb; }
+    .text-blue-200   { color: #bfdbfe; }
+    .text-green-700  { color: #15803d; }
+    .text-red-600    { color: #dc2626; }
+    .text-red-500    { color: #ef4444; }
+    .text-orange-500 { color: #f97316; }
+    .text-purple-800 { color: #6b21a8; }
+    .text-yellow-800 { color: #854d0e; }
+    .text-orange-800 { color: #9a3412; }
+    .text-green-800  { color: #166534; }
+
+    /* ── colors – background ────────────────────────────────────────── */
+    .bg-blue-800  { background-color: #1e40af; }
+    .bg-blue-700  { background-color: #1d4ed8; }
+    .bg-blue-50   { background-color: #eff6ff; }
+    .bg-white     { background-color: #ffffff; }
+    .bg-gray-50   { background-color: #f9fafb; }
+    .bg-gray-100  { background-color: #f3f4f6; }
+    .bg-green-500 { background-color: #22c55e; }
+    .bg-green-700 { background-color: #15803d; }
+    .bg-purple-100 { background-color: #f3e8ff; }
+    .bg-blue-100   { background-color: #dbeafe; }
+    .bg-yellow-100 { background-color: #fef9c3; }
+    .bg-green-100  { background-color: #dcfce7; }
+    .bg-orange-100 { background-color: #ffedd5; }
+
+    /* ── borders ────────────────────────────────────────────────────── */
+    .border          { border: 1px solid; }
+    .border-gray-200 { border-color: #e5e7eb; }
+    .border-gray-300 { border-color: #d1d5db; }
+    .border-blue-200 { border-color: #bfdbfe; }
+    .border-t-2      { border-top-width: 2px; border-top-style: solid; }
+
+    /* ── border radius ──────────────────────────────────────────────── */
+    .rounded-xl   { border-radius: 0.75rem; }
+    .rounded-lg   { border-radius: 0.5rem; }
+    .rounded-full { border-radius: 9999px; }
+    .rounded      { border-radius: 0.25rem; }
+
+    /* ── shadows ────────────────────────────────────────────────────── */
+    .shadow-md { box-shadow: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -2px rgba(0,0,0,.1); }
+    .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0,0,0,.05); }
+
+    /* ── transition ─────────────────────────────────────────────────── */
+    .transition { transition: background-color .15s ease, color .15s ease,
+                              border-color .15s ease, box-shadow .15s ease; }
+
+    /* ── hover states ───────────────────────────────────────────────── */
+    .hover\:bg-blue-800:hover   { background-color: #1e3a8a; }
+    .hover\:bg-blue-50:hover    { background-color: #eff6ff; }
+    .hover\:bg-green-800:hover  { background-color: #166534; }
+    .hover\:bg-gray-50:hover    { background-color: #f9fafb; }
+    .hover\:shadow-md:hover     { box-shadow: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -2px rgba(0,0,0,.1); }
+    .hover\:border-blue-300:hover { border-color: #93c5fd; }
+    .hover\:text-blue-200:hover { color: #bfdbfe; }
+    tr.hover\:bg-blue-50:hover td { background-color: #eff6ff; }
+    tr.hover\:bg-gray-50:hover td { background-color: #f9fafb; }
+
+    /* ── utility ────────────────────────────────────────────────────── */
+    .hidden { display: none !important; }
+
+    /* ── editing row ────────────────────────────────────────────────── */
+    tr.editing td { background-color: #fefce8; }
+
+    /* ── spin button removal ────────────────────────────────────────── */
     input[type=number] { -moz-appearance: textfield; }
     input[type=number]::-webkit-outer-spin-button,
     input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    /* ── focus ring ─────────────────────────────────────────────────── */
+    input:focus, select:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px #3b82f6;
+    }
+
+    /* ── print ──────────────────────────────────────────────────────── */
     @media print {
       .no-print { display: none !important; }
       body { background: white; }
+      header { background: #1e40af !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      thead tr { background: #1e40af !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
   </style>
 </head>
@@ -43,10 +203,8 @@
     <p class="text-gray-500 mt-1">School payroll overview</p>
   </div>
 
-  <!-- stat cards -->
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8" id="stat-cards"></div>
 
-  <!-- recent periods -->
   <section class="mb-8">
     <div class="flex items-center justify-between mb-3">
       <h2 class="text-lg font-semibold">Recent Payroll Periods</h2>
@@ -70,7 +228,6 @@
     </div>
   </section>
 
-  <!-- quick actions -->
   <section class="no-print">
     <h2 class="text-lg font-semibold mb-3">Quick Actions</h2>
     <div class="flex flex-wrap gap-3">
@@ -90,23 +247,22 @@
     <button onclick="toggleAddEmployee()" class="no-print px-4 py-2 bg-blue-700 text-white rounded-lg text-sm hover:bg-blue-800 transition">+ Add Employee</button>
   </div>
 
-  <!-- add form (hidden by default) -->
   <div id="add-emp-form" class="hidden bg-white border border-blue-200 rounded-xl p-5 mb-5 shadow-sm no-print">
     <h3 class="font-semibold mb-4 text-sm">New Employee</h3>
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
       <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">Full Name</label>
+        <label class="text-xs font-medium text-gray-600" style="display:block;margin-bottom:.25rem">Full Name</label>
         <input id="new-emp-name" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Mrs Jane Doe" />
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">Position</label>
+        <label class="text-xs font-medium text-gray-600" style="display:block;margin-bottom:.25rem">Position</label>
         <select id="new-emp-pos" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
           <option>Principal</option><option selected>Teacher</option><option>Caretaker</option>
           <option>Groundsman</option><option>Administrator</option><option>Other</option>
         </select>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">Base Salary ($)</label>
+        <label class="text-xs font-medium text-gray-600" style="display:block;margin-bottom:.25rem">Base Salary ($)</label>
         <input id="new-emp-sal" type="number" min="0" step="0.01" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="0.00" />
       </div>
     </div>
@@ -147,17 +303,15 @@
 <div id="page-schedule" class="hidden">
   <div class="flex items-start justify-between gap-4 mb-6">
     <div>
-      <button onclick="showPage('payroll')" class="text-blue-600 hover:underline text-sm no-print">← Back to Payroll</button>
+      <button onclick="showPage('payroll')" class="text-blue-600 text-sm no-print hover:underline">← Back to Payroll</button>
       <h1 class="text-2xl font-bold mt-1" id="schedule-title"></h1>
-      <p class="text-gray-500 text-sm mt-0.5" id="schedule-count"></p>
+      <p class="text-gray-500 text-sm mt-1" id="schedule-count"></p>
     </div>
-    <button onclick="window.print()" class="no-print px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">🖨 Print</button>
+    <button onclick="window.print()" class="no-print px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 shrink-0">🖨 Print</button>
   </div>
 
-  <!-- summary cards -->
   <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6" id="schedule-cards"></div>
 
-  <!-- table -->
   <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto mb-6">
     <table class="min-w-full text-sm" id="schedule-table">
       <thead>
@@ -182,65 +336,54 @@
 
 </main>
 
-<!-- ─────────────────────────────────────────────
-     DATA + LOGIC
-──────────────────────────────────────────────── -->
 <script>
-// ── seed data (from the April 2026 spreadsheet) ──────────────────────
+// ── seed data ──────────────────────────────────────────────────────
 const state = {
   employees: [
-    { id: 1,  name: "Mrs Annah Majazi",        position: "Principal",     baseSalary: 1000 },
-    { id: 2,  name: "Mr John Mushore",          position: "Teacher",       baseSalary: 400  },
-    { id: 3,  name: "Ms Veronica Mufudza",      position: "Teacher",       baseSalary: 400  },
-    { id: 4,  name: "Miss Mahachi",             position: "Teacher",       baseSalary: 150  },
-    { id: 5,  name: "Mrs Constance Murandu",    position: "Teacher",       baseSalary: 400  },
-    { id: 6,  name: "Mr Phillip Munguma",       position: "Teacher",       baseSalary: 400  },
-    { id: 7,  name: "Tafadzwa Dube",            position: "Teacher",       baseSalary: 300  },
-    { id: 8,  name: "Miss Nomathamsanga Maja",  position: "Teacher",       baseSalary: 350  },
-    { id: 9,  name: "Mr Givemore Marekwa",      position: "Caretaker",     baseSalary: 260  },
-    { id: 10, name: "Mr Joel Chisero",          position: "Groundsman",    baseSalary: 260  },
-    { id: 11, name: "Mr Glory Sanyika",         position: "Administrator", baseSalary: 400  },
+    { id:1,  name:"Mrs Annah Majazi",       position:"Principal",     baseSalary:1000 },
+    { id:2,  name:"Mr John Mushore",         position:"Teacher",       baseSalary:400  },
+    { id:3,  name:"Ms Veronica Mufudza",     position:"Teacher",       baseSalary:400  },
+    { id:4,  name:"Miss Mahachi",            position:"Teacher",       baseSalary:150  },
+    { id:5,  name:"Mrs Constance Murandu",   position:"Teacher",       baseSalary:400  },
+    { id:6,  name:"Mr Phillip Munguma",      position:"Teacher",       baseSalary:400  },
+    { id:7,  name:"Tafadzwa Dube",           position:"Teacher",       baseSalary:300  },
+    { id:8,  name:"Miss Nomathamsanga Maja", position:"Teacher",       baseSalary:350  },
+    { id:9,  name:"Mr Givemore Marekwa",     position:"Caretaker",     baseSalary:260  },
+    { id:10, name:"Mr Joel Chisero",         position:"Groundsman",    baseSalary:260  },
+    { id:11, name:"Mr Glory Sanyika",        position:"Administrator", baseSalary:400  },
   ],
-  periods: [
-    {
-      id: 1,
-      title: "April 2026",
-      month: 4,
-      year: 2026,
-      entries: [
-        { id:1,  employeeId:1,  salary:1000, adjustedSalary:500,  actualPaid:1000, notes:null },
-        { id:2,  employeeId:2,  salary:400,  adjustedSalary:400,  actualPaid:400,  notes:null },
-        { id:3,  employeeId:3,  salary:400,  adjustedSalary:400,  actualPaid:400,  notes:null },
-        { id:4,  employeeId:4,  salary:150,  adjustedSalary:150,  actualPaid:100,  notes:null },
-        { id:5,  employeeId:5,  salary:400,  adjustedSalary:400,  actualPaid:400,  notes:null },
-        { id:6,  employeeId:6,  salary:400,  adjustedSalary:null, actualPaid:null, notes:"Paid separately: $400" },
-        { id:7,  employeeId:7,  salary:300,  adjustedSalary:300,  actualPaid:300,  notes:null },
-        { id:8,  employeeId:8,  salary:350,  adjustedSalary:350,  actualPaid:350,  notes:null },
-        { id:9,  employeeId:9,  salary:260,  adjustedSalary:260,  actualPaid:null, notes:null },
-        { id:10, employeeId:10, salary:260,  adjustedSalary:260,  actualPaid:260,  notes:null },
-        { id:11, employeeId:11, salary:400,  adjustedSalary:null, actualPaid:null, notes:"Paid separately: $400" },
-      ]
-    }
-  ],
-  currentPage: 'dashboard',
-  currentPeriodId: null,
-  editingEntryId: null,
-  nextId: 100
+  periods: [{
+    id:1, title:"April 2026", month:4, year:2026,
+    entries:[
+      { id:1,  employeeId:1,  salary:1000, adjustedSalary:500,  actualPaid:1000, notes:null },
+      { id:2,  employeeId:2,  salary:400,  adjustedSalary:400,  actualPaid:400,  notes:null },
+      { id:3,  employeeId:3,  salary:400,  adjustedSalary:400,  actualPaid:400,  notes:null },
+      { id:4,  employeeId:4,  salary:150,  adjustedSalary:150,  actualPaid:100,  notes:null },
+      { id:5,  employeeId:5,  salary:400,  adjustedSalary:400,  actualPaid:400,  notes:null },
+      { id:6,  employeeId:6,  salary:400,  adjustedSalary:null, actualPaid:null, notes:"Paid separately: $400" },
+      { id:7,  employeeId:7,  salary:300,  adjustedSalary:300,  actualPaid:300,  notes:null },
+      { id:8,  employeeId:8,  salary:350,  adjustedSalary:350,  actualPaid:350,  notes:null },
+      { id:9,  employeeId:9,  salary:260,  adjustedSalary:260,  actualPaid:null, notes:null },
+      { id:10, employeeId:10, salary:260,  adjustedSalary:260,  actualPaid:260,  notes:null },
+      { id:11, employeeId:11, salary:400,  adjustedSalary:null, actualPaid:null, notes:"Paid separately: $400" },
+    ]
+  }],
+  currentPage:'dashboard', currentPeriodId:null, editingEntryId:null, nextId:100
 };
 
-// ── helpers ──────────────────────────────────────────────────────────
+// ── helpers ────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
-const fmt = n => (n == null || n === 0) ? '–' : '$' + Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmt  = n => (n == null || n === 0) ? '–' : '$' + Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 const fmtT = n => '$' + Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 
-const POSITION_COLORS = {
-  Principal:     'bg-purple-100 text-purple-800',
-  Teacher:       'bg-blue-100 text-blue-800',
-  Caretaker:     'bg-yellow-100 text-yellow-800',
-  Groundsman:    'bg-green-100 text-green-800',
-  Administrator: 'bg-orange-100 text-orange-800',
+const POS_STYLE = {
+  Principal:     'background:#f3e8ff;color:#6b21a8',
+  Teacher:       'background:#dbeafe;color:#1e40af',
+  Caretaker:     'background:#fef9c3;color:#854d0e',
+  Groundsman:    'background:#dcfce7;color:#166534',
+  Administrator: 'background:#ffedd5;color:#9a3412',
 };
-const posColor = p => POSITION_COLORS[p] || 'bg-gray-100 text-gray-700';
+const posStyle = p => POS_STYLE[p] || 'background:#f3f4f6;color:#374151';
 
 function empById(id) { return state.employees.find(e => e.id === id); }
 
@@ -251,7 +394,7 @@ function periodTotals(p) {
   return { salary, adjusted, paid, balance: adjusted - paid };
 }
 
-// ── page routing ─────────────────────────────────────────────────────
+// ── routing ────────────────────────────────────────────────────────
 function showPage(name, periodId) {
   ['dashboard','employees','payroll','schedule'].forEach(p =>
     $('page-'+p).classList.toggle('hidden', p !== name)
@@ -260,10 +403,10 @@ function showPage(name, periodId) {
   if (name === 'dashboard')  renderDashboard();
   if (name === 'employees')  renderEmployees();
   if (name === 'payroll')    renderPeriodsList();
-  if (name === 'schedule') { state.currentPeriodId = periodId; renderSchedule(); }
+  if (name === 'schedule')   { state.currentPeriodId = periodId; renderSchedule(); }
 }
 
-// ── DASHBOARD ────────────────────────────────────────────────────────
+// ── DASHBOARD ─────────────────────────────────────────────────────
 function renderDashboard() {
   const p = state.periods[0];
   const t = p ? periodTotals(p) : null;
@@ -271,60 +414,57 @@ function renderDashboard() {
   $('stat-cards').innerHTML = [
     { label:'Total Employees', value: state.employees.length },
     { label:'Pay Periods',     value: state.periods.length   },
-    t ? { label: p.title+' – Salary', value: fmtT(t.salary),    sub:'Total scheduled' } : null,
-    t ? { label: p.title+' – Paid',   value: fmtT(t.paid),      sub:'of '+fmtT(t.adjusted)+' adjusted' } : null,
+    t ? { label: p.title+' – Salary', value: fmtT(t.salary),  sub:'Total scheduled' } : null,
+    t ? { label: p.title+' – Paid',   value: fmtT(t.paid),    sub:'of '+fmtT(t.adjusted)+' adjusted' } : null,
   ].filter(Boolean).map(c => `
-    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-      <p class="text-xs text-gray-500 uppercase tracking-wide">${c.label}</p>
-      <p class="text-2xl font-bold mt-1">${c.value}</p>
-      ${c.sub ? `<p class="text-xs text-gray-400 mt-1">${c.sub}</p>` : ''}
+    <div style="background:#fff;border:1px solid #e5e7eb;border-radius:.75rem;box-shadow:0 1px 2px rgba(0,0,0,.05);padding:1.25rem">
+      <p style="font-size:.75rem;color:#6b7280;text-transform:uppercase;letter-spacing:.05em">${c.label}</p>
+      <p style="font-size:1.5rem;font-weight:700;margin-top:.25rem">${c.value}</p>
+      ${c.sub ? `<p style="font-size:.75rem;color:#9ca3af;margin-top:.25rem">${c.sub}</p>` : ''}
     </div>`).join('');
 
   $('dash-periods').innerHTML = state.periods.map(p => {
     const t = periodTotals(p);
-    const bal = t.balance;
     return `
-    <tr class="hover:bg-blue-50 transition">
+    <tr style="cursor:default" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background=''">
       <td class="px-4 py-3 font-medium">${p.title}</td>
       <td class="px-4 py-3 text-right text-gray-500">${p.entries.length}</td>
       <td class="px-4 py-3 text-right">${fmtT(t.salary)}</td>
       <td class="px-4 py-3 text-right">${fmtT(t.adjusted)}</td>
       <td class="px-4 py-3 text-right text-green-700 font-medium">${fmtT(t.paid)}</td>
-      <td class="px-4 py-3 text-right font-medium ${bal>0?'text-red-600':'text-gray-500'}">${fmtT(bal)}</td>
+      <td class="px-4 py-3 text-right font-medium" style="color:${t.balance>0?'#dc2626':'#6b7280'}">${fmtT(t.balance)}</td>
       <td class="px-4 py-3 text-right">
-        <button onclick="showPage('schedule',${p.id})" class="text-blue-600 hover:underline text-xs">View</button>
+        <button onclick="showPage('schedule',${p.id})" style="color:#2563eb;font-size:.75rem;text-decoration:underline">View</button>
       </td>
     </tr>`;
   }).join('');
 }
 
-// ── EMPLOYEES ────────────────────────────────────────────────────────
+// ── EMPLOYEES ─────────────────────────────────────────────────────
 function renderEmployees() {
   $('emp-count').textContent = state.employees.length + ' staff members';
   $('emp-table').innerHTML = state.employees.map((e, i) => `
-    <tr class="hover:bg-gray-50 transition">
+    <tr onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background=''">
       <td class="px-4 py-3 text-gray-400">${i+1}</td>
       <td class="px-4 py-3 font-medium">${e.name}</td>
       <td class="px-4 py-3">
-        <span class="px-2 py-0.5 rounded-full text-xs font-medium ${posColor(e.position)}">${e.position}</span>
+        <span style="${posStyle(e.position)};padding:.125rem .5rem;border-radius:9999px;font-size:.75rem;font-weight:500">${e.position}</span>
       </td>
       <td class="px-4 py-3 text-right font-mono">$${e.baseSalary.toFixed(2)}</td>
       <td class="px-4 py-3 text-right no-print">
-        <button onclick="deleteEmployee(${e.id})" class="text-red-500 hover:underline text-xs">Delete</button>
+        <button onclick="deleteEmployee(${e.id})" style="color:#ef4444;font-size:.75rem;text-decoration:underline">Delete</button>
       </td>
     </tr>`).join('');
 }
 
-function toggleAddEmployee() {
-  $('add-emp-form').classList.toggle('hidden');
-}
+function toggleAddEmployee() { $('add-emp-form').classList.toggle('hidden'); }
 
 function addEmployee() {
   const name = $('new-emp-name').value.trim();
   const pos  = $('new-emp-pos').value;
   const sal  = parseFloat($('new-emp-sal').value);
   if (!name || !pos || isNaN(sal)) return alert('Please fill in all fields.');
-  state.employees.push({ id: ++state.nextId, name, position: pos, baseSalary: sal });
+  state.employees.push({ id:++state.nextId, name, position:pos, baseSalary:sal });
   $('new-emp-name').value = '';
   $('new-emp-sal').value  = '';
   toggleAddEmployee();
@@ -337,39 +477,40 @@ function deleteEmployee(id) {
   renderEmployees();
 }
 
-// ── PERIODS LIST ─────────────────────────────────────────────────────
+// ── PERIODS LIST ──────────────────────────────────────────────────
 function renderPeriodsList() {
   $('period-count').textContent = state.periods.length + ' period(s)';
   $('periods-list').innerHTML = state.periods.map(p => {
-    const t = periodTotals(p);
+    const t   = periodTotals(p);
     const pct = t.adjusted > 0 ? Math.round((t.paid/t.adjusted)*100) : 0;
     return `
-    <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5 cursor-pointer hover:shadow-md hover:border-blue-300 transition"
-         onclick="showPage('schedule',${p.id})">
+    <div onclick="showPage('schedule',${p.id})" style="background:#fff;border:1px solid #e5e7eb;border-radius:.75rem;box-shadow:0 1px 2px rgba(0,0,0,.05);padding:1.25rem;cursor:pointer"
+         onmouseover="this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,.1)';this.style.borderColor='#93c5fd'"
+         onmouseout="this.style.boxShadow='0 1px 2px rgba(0,0,0,.05)';this.style.borderColor='#e5e7eb'">
       <div class="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h2 class="text-base font-semibold">${p.title}</h2>
-          <p class="text-xs text-gray-400 mt-0.5">${p.entries.length} employees</p>
+          <p style="font-size:.75rem;color:#9ca3af;margin-top:.125rem">${p.entries.length} employees</p>
         </div>
-        <div class="flex gap-6 text-sm text-right flex-wrap">
-          <div><p class="text-xs text-gray-400">Total Salary</p><p class="font-medium">${fmtT(t.salary)}</p></div>
-          <div><p class="text-xs text-gray-400">Adjusted</p><p class="font-medium">${fmtT(t.adjusted)}</p></div>
-          <div><p class="text-xs text-gray-400">Paid</p><p class="font-medium text-green-700">${fmtT(t.paid)}</p></div>
-          <div><p class="text-xs text-gray-400">Outstanding</p>
-               <p class="font-medium ${t.balance>0?'text-red-600':'text-gray-500'}">${fmtT(t.balance)}</p></div>
+        <div class="flex gap-6 flex-wrap" style="text-align:right;font-size:.875rem">
+          <div><p style="font-size:.75rem;color:#9ca3af">Total Salary</p><p class="font-medium">${fmtT(t.salary)}</p></div>
+          <div><p style="font-size:.75rem;color:#9ca3af">Adjusted</p><p class="font-medium">${fmtT(t.adjusted)}</p></div>
+          <div><p style="font-size:.75rem;color:#9ca3af">Paid</p><p class="font-medium text-green-700">${fmtT(t.paid)}</p></div>
+          <div><p style="font-size:.75rem;color:#9ca3af">Outstanding</p>
+               <p class="font-medium" style="color:${t.balance>0?'#dc2626':'#6b7280'}">${fmtT(t.balance)}</p></div>
         </div>
       </div>
       <div class="mt-3">
-        <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-          <div class="h-full bg-green-500 rounded-full" style="width:${pct}%"></div>
+        <div style="height:.375rem;background:#f3f4f6;border-radius:9999px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:#22c55e;border-radius:9999px"></div>
         </div>
-        <p class="text-xs text-gray-400 mt-1">${pct}% paid</p>
+        <p style="font-size:.75rem;color:#9ca3af;margin-top:.25rem">${pct}% paid</p>
       </div>
     </div>`;
   }).join('') || '<p class="text-gray-400">No payroll periods.</p>';
 }
 
-// ── SCHEDULE ─────────────────────────────────────────────────────────
+// ── SCHEDULE ──────────────────────────────────────────────────────
 function renderSchedule() {
   const period = state.periods.find(p => p.id === state.currentPeriodId);
   if (!period) return;
@@ -379,26 +520,25 @@ function renderSchedule() {
 
   const t = periodTotals(period);
   $('schedule-cards').innerHTML = [
-    { label:'Total Salary',  value: fmtT(t.salary),   cls:'text-gray-900' },
-    { label:'Adjusted',      value: fmtT(t.adjusted), cls:'text-gray-900' },
-    { label:'Actual Paid',   value: fmtT(t.paid),     cls:'text-green-700' },
-    { label:'Outstanding',   value: fmtT(t.balance),  cls: t.balance>0?'text-red-600':'text-gray-500' },
+    { label:'Total Salary', value:fmtT(t.salary),   color:'#111827' },
+    { label:'Adjusted',     value:fmtT(t.adjusted), color:'#111827' },
+    { label:'Actual Paid',  value:fmtT(t.paid),     color:'#15803d' },
+    { label:'Outstanding',  value:fmtT(t.balance),  color:t.balance>0?'#dc2626':'#6b7280' },
   ].map(c => `
-    <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-      <p class="text-xs text-gray-400 uppercase tracking-wide">${c.label}</p>
-      <p class="text-xl font-bold mt-1 font-mono ${c.cls}">${c.value}</p>
+    <div style="background:#fff;border:1px solid #e5e7eb;border-radius:.75rem;padding:1rem;box-shadow:0 1px 2px rgba(0,0,0,.05)">
+      <p style="font-size:.75rem;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em">${c.label}</p>
+      <p style="font-size:1.25rem;font-weight:700;margin-top:.25rem;font-family:monospace;color:${c.color}">${c.value}</p>
     </div>`).join('');
 
   renderScheduleRows(period);
 
-  // notes
   const noted = period.entries.filter(e => e.notes);
   if (noted.length) {
     $('schedule-notes').classList.remove('hidden');
-    $('schedule-notes').innerHTML = '<strong>Notes:</strong><ul class="mt-1 space-y-0.5">' +
+    $('schedule-notes').innerHTML = '<strong>Notes:</strong><ul style="margin-top:.25rem">' +
       noted.map(e => {
         const emp = empById(e.employeeId);
-        return `<li><span class="font-medium">${emp?.name}:</span> ${e.notes}</li>`;
+        return `<li><span style="font-weight:500">${emp?.name}:</span> ${e.notes}</li>`;
       }).join('') + '</ul>';
   } else {
     $('schedule-notes').classList.add('hidden');
@@ -421,78 +561,76 @@ function renderScheduleRows(period) {
         <td class="px-4 py-2 text-gray-500">${emp?.position}</td>
         <td class="px-4 py-2">
           <input type="number" id="edit-salary" value="${entry.salary}" step="0.01" min="0"
-            class="w-24 border border-gray-300 rounded px-2 py-1 text-right text-xs" />
+            style="width:6rem;border:1px solid #d1d5db;border-radius:.25rem;padding:.25rem .5rem;text-align:right;font-size:.75rem" />
         </td>
         <td class="px-4 py-2">
-          <input type="number" id="edit-adj" value="${entry.adjustedSalary ?? ''}" step="0.01" min="0"
-            placeholder="–" class="w-24 border border-gray-300 rounded px-2 py-1 text-right text-xs" />
+          <input type="number" id="edit-adj" value="${entry.adjustedSalary ?? ''}" step="0.01" min="0" placeholder="–"
+            style="width:6rem;border:1px solid #d1d5db;border-radius:.25rem;padding:.25rem .5rem;text-align:right;font-size:.75rem" />
         </td>
         <td class="px-4 py-2">
-          <input type="number" id="edit-paid" value="${entry.actualPaid ?? ''}" step="0.01" min="0"
-            placeholder="–" class="w-24 border border-gray-300 rounded px-2 py-1 text-right text-xs" />
+          <input type="number" id="edit-paid" value="${entry.actualPaid ?? ''}" step="0.01" min="0" placeholder="–"
+            style="width:6rem;border:1px solid #d1d5db;border-radius:.25rem;padding:.25rem .5rem;text-align:right;font-size:.75rem" />
         </td>
         <td class="px-4 py-2 text-right text-gray-400 text-xs">–</td>
         <td class="px-4 py-2 text-center no-print">
-          <button onclick="saveEntry(${entry.id})" class="text-green-700 hover:underline text-xs mr-2">Save</button>
-          <button onclick="cancelEdit()" class="text-gray-500 hover:underline text-xs">Cancel</button>
+          <button onclick="saveEntry(${entry.id})" style="color:#15803d;font-size:.75rem;text-decoration:underline;margin-right:.5rem">Save</button>
+          <button onclick="cancelEdit()" style="color:#6b7280;font-size:.75rem;text-decoration:underline">Cancel</button>
         </td>
       </tr>`;
     }
 
-    const balClass = balance > 0 ? 'text-red-600' : balance < 0 ? 'text-orange-500' : 'text-gray-400';
+    const balColor = balance > 0 ? '#dc2626' : balance < 0 ? '#f97316' : '#9ca3af';
     return `
-    <tr class="hover:bg-blue-50 transition">
+    <tr onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background=''">
       <td class="px-4 py-3 text-gray-400">${idx+1}</td>
       <td class="px-4 py-3 font-medium">${emp?.name}</td>
       <td class="px-4 py-3 text-gray-500">${emp?.position}</td>
       <td class="px-4 py-3 text-right font-mono">${fmt(entry.salary)}</td>
       <td class="px-4 py-3 text-right font-mono">${fmt(entry.adjustedSalary)}</td>
       <td class="px-4 py-3 text-right font-mono text-green-700">${fmt(entry.actualPaid)}</td>
-      <td class="px-4 py-3 text-right font-mono ${balClass}">
+      <td class="px-4 py-3 text-right font-mono" style="color:${balColor}">
         ${entry.adjustedSalary != null ? fmt(balance) : '–'}
       </td>
       <td class="px-4 py-3 text-center no-print">
-        <button onclick="startEdit(${entry.id})" class="text-blue-600 hover:underline text-xs mr-2">Edit</button>
-        <button onclick="removeEntry(${entry.id})" class="text-red-500 hover:underline text-xs">Remove</button>
+        <button onclick="startEdit(${entry.id})" style="color:#2563eb;font-size:.75rem;text-decoration:underline;margin-right:.5rem">Edit</button>
+        <button onclick="removeEntry(${entry.id})" style="color:#ef4444;font-size:.75rem;text-decoration:underline">Remove</button>
       </td>
     </tr>`;
   }).join('');
 
   $('schedule-foot').innerHTML = `
-    <tr class="bg-gray-50 font-semibold text-sm border-t-2 border-gray-300">
+    <tr style="background:#f9fafb;font-weight:600;font-size:.875rem;border-top:2px solid #d1d5db">
       <td colspan="3" class="px-4 py-3 text-right uppercase tracking-wide text-gray-600">TOTAL</td>
       <td class="px-4 py-3 text-right font-mono">${fmtT(t.salary)}</td>
       <td class="px-4 py-3 text-right font-mono">${fmtT(t.adjusted)}</td>
       <td class="px-4 py-3 text-right font-mono text-green-700">${fmtT(t.paid)}</td>
-      <td class="px-4 py-3 text-right font-mono ${t.balance>0?'text-red-600':'text-gray-500'}">${fmtT(t.balance)}</td>
+      <td class="px-4 py-3 text-right font-mono" style="color:${t.balance>0?'#dc2626':'#6b7280'}">${fmtT(t.balance)}</td>
       <td class="no-print"></td>
     </tr>`;
 }
 
 function startEdit(entryId) {
   state.editingEntryId = entryId;
-  const period = state.periods.find(p => p.id === state.currentPeriodId);
-  renderScheduleRows(period);
+  renderScheduleRows(state.periods.find(p => p.id === state.currentPeriodId));
 }
 
 function cancelEdit() {
   state.editingEntryId = null;
-  const period = state.periods.find(p => p.id === state.currentPeriodId);
-  renderScheduleRows(period);
+  renderScheduleRows(state.periods.find(p => p.id === state.currentPeriodId));
 }
 
 function saveEntry(entryId) {
   const period = state.periods.find(p => p.id === state.currentPeriodId);
-  const entry = period.entries.find(e => e.id === entryId);
-  const sal  = parseFloat($('edit-salary').value);
-  const adj  = $('edit-adj').value  !== '' ? parseFloat($('edit-adj').value)  : null;
-  const paid = $('edit-paid').value !== '' ? parseFloat($('edit-paid').value) : null;
-  entry.salary         = isNaN(sal)  ? entry.salary  : sal;
-  entry.adjustedSalary = isNaN(adj)  ? null : adj;
-  entry.actualPaid     = isNaN(paid) ? null : paid;
+  const entry  = period.entries.find(e => e.id === entryId);
+  const sal    = parseFloat($('edit-salary').value);
+  const adj    = $('edit-adj').value  !== '' ? parseFloat($('edit-adj').value)  : null;
+  const paid   = $('edit-paid').value !== '' ? parseFloat($('edit-paid').value) : null;
+  entry.salary         = isNaN(sal)  ? entry.salary : sal;
+  entry.adjustedSalary = (adj  == null || isNaN(adj))  ? null : adj;
+  entry.actualPaid     = (paid == null || isNaN(paid)) ? null : paid;
   state.editingEntryId = null;
   renderSchedule();
-  renderDashboard(); // keep dashboard totals in sync
+  renderDashboard();
 }
 
 function removeEntry(entryId) {
@@ -502,7 +640,6 @@ function removeEntry(entryId) {
   renderSchedule();
 }
 
-// ── boot ─────────────────────────────────────────────────────────────
 showPage('dashboard');
 </script>
 </body>
