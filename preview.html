@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payroll System – Preview</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Segoe UI', system-ui, sans-serif; }
+    .tab { cursor: pointer; transition: all .15s; }
+    .tab.active { background: #1e3a8a; color: white; }
+    .tab:not(.active):hover { background: #eff6ff; }
+    tr.editing td { background: #fefce8; }
+    input[type=number] { -moz-appearance: textfield; }
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white; }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<!-- NAV -->
+<header class="bg-blue-800 text-white shadow-md no-print">
+  <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+    <span class="font-bold text-xl tracking-tight">Payroll System</span>
+    <nav class="flex gap-6 text-sm font-medium">
+      <button onclick="showPage('dashboard')" class="hover:text-blue-200 transition">Dashboard</button>
+      <button onclick="showPage('employees')" class="hover:text-blue-200 transition">Employees</button>
+      <button onclick="showPage('payroll')" class="hover:text-blue-200 transition">Payroll</button>
+    </nav>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 py-8">
+
+<!-- ───────────────── DASHBOARD ───────────────── -->
+<div id="page-dashboard">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
+    <p class="text-gray-500 mt-1">School payroll overview</p>
+  </div>
+
+  <!-- stat cards -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8" id="stat-cards"></div>
+
+  <!-- recent periods -->
+  <section class="mb-8">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-lg font-semibold">Recent Payroll Periods</h2>
+      <button onclick="showPage('payroll')" class="text-sm text-blue-700 hover:underline">View all →</button>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+      <table class="min-w-full text-sm">
+        <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+          <tr>
+            <th class="px-4 py-3 text-left">Period</th>
+            <th class="px-4 py-3 text-right">Employees</th>
+            <th class="px-4 py-3 text-right">Total Salary</th>
+            <th class="px-4 py-3 text-right">Adjusted</th>
+            <th class="px-4 py-3 text-right">Actual Paid</th>
+            <th class="px-4 py-3 text-right">Balance</th>
+            <th class="px-4 py-3"></th>
+          </tr>
+        </thead>
+        <tbody id="dash-periods"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- quick actions -->
+  <section class="no-print">
+    <h2 class="text-lg font-semibold mb-3">Quick Actions</h2>
+    <div class="flex flex-wrap gap-3">
+      <button onclick="showPage('employees')" class="px-4 py-2 bg-blue-700 text-white rounded-lg text-sm hover:bg-blue-800 transition">+ Add Employee</button>
+      <button onclick="showPage('payroll')" class="px-4 py-2 bg-green-700 text-white rounded-lg text-sm hover:bg-green-800 transition">+ New Pay Period</button>
+    </div>
+  </section>
+</div>
+
+<!-- ───────────────── EMPLOYEES ───────────────── -->
+<div id="page-employees" class="hidden">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold">Employees</h1>
+      <p class="text-gray-500 text-sm mt-1" id="emp-count"></p>
+    </div>
+    <button onclick="toggleAddEmployee()" class="no-print px-4 py-2 bg-blue-700 text-white rounded-lg text-sm hover:bg-blue-800 transition">+ Add Employee</button>
+  </div>
+
+  <!-- add form (hidden by default) -->
+  <div id="add-emp-form" class="hidden bg-white border border-blue-200 rounded-xl p-5 mb-5 shadow-sm no-print">
+    <h3 class="font-semibold mb-4 text-sm">New Employee</h3>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">Full Name</label>
+        <input id="new-emp-name" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Mrs Jane Doe" />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">Position</label>
+        <select id="new-emp-pos" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+          <option>Principal</option><option selected>Teacher</option><option>Caretaker</option>
+          <option>Groundsman</option><option>Administrator</option><option>Other</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">Base Salary ($)</label>
+        <input id="new-emp-sal" type="number" min="0" step="0.01" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="0.00" />
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="addEmployee()" class="px-4 py-2 bg-blue-700 text-white rounded-lg text-sm hover:bg-blue-800">Save Employee</button>
+      <button onclick="toggleAddEmployee()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Cancel</button>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <table class="min-w-full text-sm">
+      <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+        <tr>
+          <th class="px-4 py-3 text-left">#</th>
+          <th class="px-4 py-3 text-left">Name</th>
+          <th class="px-4 py-3 text-left">Position</th>
+          <th class="px-4 py-3 text-right">Base Salary</th>
+          <th class="px-4 py-3 text-right no-print">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="emp-table"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ───────────────── PAYROLL LIST ───────────────── -->
+<div id="page-payroll" class="hidden">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold">Payroll Periods</h1>
+      <p class="text-gray-500 text-sm mt-1" id="period-count"></p>
+    </div>
+  </div>
+  <div id="periods-list" class="grid gap-4"></div>
+</div>
+
+<!-- ───────────────── PAYROLL SCHEDULE ───────────────── -->
+<div id="page-schedule" class="hidden">
+  <div class="flex items-start justify-between gap-4 mb-6">
+    <div>
+      <button onclick="showPage('payroll')" class="text-blue-600 hover:underline text-sm no-print">← Back to Payroll</button>
+      <h1 class="text-2xl font-bold mt-1" id="schedule-title"></h1>
+      <p class="text-gray-500 text-sm mt-0.5" id="schedule-count"></p>
+    </div>
+    <button onclick="window.print()" class="no-print px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">🖨 Print</button>
+  </div>
+
+  <!-- summary cards -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6" id="schedule-cards"></div>
+
+  <!-- table -->
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto mb-6">
+    <table class="min-w-full text-sm" id="schedule-table">
+      <thead>
+        <tr class="bg-blue-800 text-white text-xs uppercase">
+          <th class="px-4 py-3 text-left">#</th>
+          <th class="px-4 py-3 text-left">Name</th>
+          <th class="px-4 py-3 text-left">Position</th>
+          <th class="px-4 py-3 text-right">Salary</th>
+          <th class="px-4 py-3 text-right">Adjusted Salaries</th>
+          <th class="px-4 py-3 text-right">Actual Paid</th>
+          <th class="px-4 py-3 text-right">Balance</th>
+          <th class="px-4 py-3 text-center no-print">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="schedule-body"></tbody>
+      <tfoot id="schedule-foot"></tfoot>
+    </table>
+  </div>
+
+  <div id="schedule-notes" class="hidden text-xs text-gray-500 bg-gray-50 rounded-lg p-3 border border-gray-200 mb-4"></div>
+</div>
+
+</main>
+
+<!-- ─────────────────────────────────────────────
+     DATA + LOGIC
+──────────────────────────────────────────────── -->
+<script>
+// ── seed data (from the April 2026 spreadsheet) ──────────────────────
+const state = {
+  employees: [
+    { id: 1,  name: "Mrs Annah Majazi",        position: "Principal",     baseSalary: 1000 },
+    { id: 2,  name: "Mr John Mushore",          position: "Teacher",       baseSalary: 400  },
+    { id: 3,  name: "Ms Veronica Mufudza",      position: "Teacher",       baseSalary: 400  },
+    { id: 4,  name: "Miss Mahachi",             position: "Teacher",       baseSalary: 150  },
+    { id: 5,  name: "Mrs Constance Murandu",    position: "Teacher",       baseSalary: 400  },
+    { id: 6,  name: "Mr Phillip Munguma",       position: "Teacher",       baseSalary: 400  },
+    { id: 7,  name: "Tafadzwa Dube",            position: "Teacher",       baseSalary: 300  },
+    { id: 8,  name: "Miss Nomathamsanga Maja",  position: "Teacher",       baseSalary: 350  },
+    { id: 9,  name: "Mr Givemore Marekwa",      position: "Caretaker",     baseSalary: 260  },
+    { id: 10, name: "Mr Joel Chisero",          position: "Groundsman",    baseSalary: 260  },
+    { id: 11, name: "Mr Glory Sanyika",         position: "Administrator", baseSalary: 400  },
+  ],
+  periods: [
+    {
+      id: 1,
+      title: "April 2026",
+      month: 4,
+      year: 2026,
+      entries: [
+        { id:1,  employeeId:1,  salary:1000, adjustedSalary:500,  actualPaid:1000, notes:null },
+        { id:2,  employeeId:2,  salary:400,  adjustedSalary:400,  actualPaid:400,  notes:null },
+        { id:3,  employeeId:3,  salary:400,  adjustedSalary:400,  actualPaid:400,  notes:null },
+        { id:4,  employeeId:4,  salary:150,  adjustedSalary:150,  actualPaid:100,  notes:null },
+        { id:5,  employeeId:5,  salary:400,  adjustedSalary:400,  actualPaid:400,  notes:null },
+        { id:6,  employeeId:6,  salary:400,  adjustedSalary:null, actualPaid:null, notes:"Paid separately: $400" },
+        { id:7,  employeeId:7,  salary:300,  adjustedSalary:300,  actualPaid:300,  notes:null },
+        { id:8,  employeeId:8,  salary:350,  adjustedSalary:350,  actualPaid:350,  notes:null },
+        { id:9,  employeeId:9,  salary:260,  adjustedSalary:260,  actualPaid:null, notes:null },
+        { id:10, employeeId:10, salary:260,  adjustedSalary:260,  actualPaid:260,  notes:null },
+        { id:11, employeeId:11, salary:400,  adjustedSalary:null, actualPaid:null, notes:"Paid separately: $400" },
+      ]
+    }
+  ],
+  currentPage: 'dashboard',
+  currentPeriodId: null,
+  editingEntryId: null,
+  nextId: 100
+};
+
+// ── helpers ──────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const fmt = n => (n == null || n === 0) ? '–' : '$' + Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtT = n => '$' + Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+const POSITION_COLORS = {
+  Principal:     'bg-purple-100 text-purple-800',
+  Teacher:       'bg-blue-100 text-blue-800',
+  Caretaker:     'bg-yellow-100 text-yellow-800',
+  Groundsman:    'bg-green-100 text-green-800',
+  Administrator: 'bg-orange-100 text-orange-800',
+};
+const posColor = p => POSITION_COLORS[p] || 'bg-gray-100 text-gray-700';
+
+function empById(id) { return state.employees.find(e => e.id === id); }
+
+function periodTotals(p) {
+  const salary   = p.entries.reduce((s,e) => s + e.salary, 0);
+  const adjusted = p.entries.reduce((s,e) => s + (e.adjustedSalary ?? 0), 0);
+  const paid     = p.entries.reduce((s,e) => s + (e.actualPaid ?? 0), 0);
+  return { salary, adjusted, paid, balance: adjusted - paid };
+}
+
+// ── page routing ─────────────────────────────────────────────────────
+function showPage(name, periodId) {
+  ['dashboard','employees','payroll','schedule'].forEach(p =>
+    $('page-'+p).classList.toggle('hidden', p !== name)
+  );
+  state.currentPage = name;
+  if (name === 'dashboard')  renderDashboard();
+  if (name === 'employees')  renderEmployees();
+  if (name === 'payroll')    renderPeriodsList();
+  if (name === 'schedule') { state.currentPeriodId = periodId; renderSchedule(); }
+}
+
+// ── DASHBOARD ────────────────────────────────────────────────────────
+function renderDashboard() {
+  const p = state.periods[0];
+  const t = p ? periodTotals(p) : null;
+
+  $('stat-cards').innerHTML = [
+    { label:'Total Employees', value: state.employees.length },
+    { label:'Pay Periods',     value: state.periods.length   },
+    t ? { label: p.title+' – Salary', value: fmtT(t.salary),    sub:'Total scheduled' } : null,
+    t ? { label: p.title+' – Paid',   value: fmtT(t.paid),      sub:'of '+fmtT(t.adjusted)+' adjusted' } : null,
+  ].filter(Boolean).map(c => `
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+      <p class="text-xs text-gray-500 uppercase tracking-wide">${c.label}</p>
+      <p class="text-2xl font-bold mt-1">${c.value}</p>
+      ${c.sub ? `<p class="text-xs text-gray-400 mt-1">${c.sub}</p>` : ''}
+    </div>`).join('');
+
+  $('dash-periods').innerHTML = state.periods.map(p => {
+    const t = periodTotals(p);
+    const bal = t.balance;
+    return `
+    <tr class="hover:bg-blue-50 transition">
+      <td class="px-4 py-3 font-medium">${p.title}</td>
+      <td class="px-4 py-3 text-right text-gray-500">${p.entries.length}</td>
+      <td class="px-4 py-3 text-right">${fmtT(t.salary)}</td>
+      <td class="px-4 py-3 text-right">${fmtT(t.adjusted)}</td>
+      <td class="px-4 py-3 text-right text-green-700 font-medium">${fmtT(t.paid)}</td>
+      <td class="px-4 py-3 text-right font-medium ${bal>0?'text-red-600':'text-gray-500'}">${fmtT(bal)}</td>
+      <td class="px-4 py-3 text-right">
+        <button onclick="showPage('schedule',${p.id})" class="text-blue-600 hover:underline text-xs">View</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── EMPLOYEES ────────────────────────────────────────────────────────
+function renderEmployees() {
+  $('emp-count').textContent = state.employees.length + ' staff members';
+  $('emp-table').innerHTML = state.employees.map((e, i) => `
+    <tr class="hover:bg-gray-50 transition">
+      <td class="px-4 py-3 text-gray-400">${i+1}</td>
+      <td class="px-4 py-3 font-medium">${e.name}</td>
+      <td class="px-4 py-3">
+        <span class="px-2 py-0.5 rounded-full text-xs font-medium ${posColor(e.position)}">${e.position}</span>
+      </td>
+      <td class="px-4 py-3 text-right font-mono">$${e.baseSalary.toFixed(2)}</td>
+      <td class="px-4 py-3 text-right no-print">
+        <button onclick="deleteEmployee(${e.id})" class="text-red-500 hover:underline text-xs">Delete</button>
+      </td>
+    </tr>`).join('');
+}
+
+function toggleAddEmployee() {
+  $('add-emp-form').classList.toggle('hidden');
+}
+
+function addEmployee() {
+  const name = $('new-emp-name').value.trim();
+  const pos  = $('new-emp-pos').value;
+  const sal  = parseFloat($('new-emp-sal').value);
+  if (!name || !pos || isNaN(sal)) return alert('Please fill in all fields.');
+  state.employees.push({ id: ++state.nextId, name, position: pos, baseSalary: sal });
+  $('new-emp-name').value = '';
+  $('new-emp-sal').value  = '';
+  toggleAddEmployee();
+  renderEmployees();
+}
+
+function deleteEmployee(id) {
+  if (!confirm('Delete this employee?')) return;
+  state.employees = state.employees.filter(e => e.id !== id);
+  renderEmployees();
+}
+
+// ── PERIODS LIST ─────────────────────────────────────────────────────
+function renderPeriodsList() {
+  $('period-count').textContent = state.periods.length + ' period(s)';
+  $('periods-list').innerHTML = state.periods.map(p => {
+    const t = periodTotals(p);
+    const pct = t.adjusted > 0 ? Math.round((t.paid/t.adjusted)*100) : 0;
+    return `
+    <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5 cursor-pointer hover:shadow-md hover:border-blue-300 transition"
+         onclick="showPage('schedule',${p.id})">
+      <div class="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h2 class="text-base font-semibold">${p.title}</h2>
+          <p class="text-xs text-gray-400 mt-0.5">${p.entries.length} employees</p>
+        </div>
+        <div class="flex gap-6 text-sm text-right flex-wrap">
+          <div><p class="text-xs text-gray-400">Total Salary</p><p class="font-medium">${fmtT(t.salary)}</p></div>
+          <div><p class="text-xs text-gray-400">Adjusted</p><p class="font-medium">${fmtT(t.adjusted)}</p></div>
+          <div><p class="text-xs text-gray-400">Paid</p><p class="font-medium text-green-700">${fmtT(t.paid)}</p></div>
+          <div><p class="text-xs text-gray-400">Outstanding</p>
+               <p class="font-medium ${t.balance>0?'text-red-600':'text-gray-500'}">${fmtT(t.balance)}</p></div>
+        </div>
+      </div>
+      <div class="mt-3">
+        <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+          <div class="h-full bg-green-500 rounded-full" style="width:${pct}%"></div>
+        </div>
+        <p class="text-xs text-gray-400 mt-1">${pct}% paid</p>
+      </div>
+    </div>`;
+  }).join('') || '<p class="text-gray-400">No payroll periods.</p>';
+}
+
+// ── SCHEDULE ─────────────────────────────────────────────────────────
+function renderSchedule() {
+  const period = state.periods.find(p => p.id === state.currentPeriodId);
+  if (!period) return;
+
+  $('schedule-title').textContent = 'Adjusted Salaries Schedule – ' + period.title;
+  $('schedule-count').textContent = period.entries.length + ' employees';
+
+  const t = periodTotals(period);
+  $('schedule-cards').innerHTML = [
+    { label:'Total Salary',  value: fmtT(t.salary),   cls:'text-gray-900' },
+    { label:'Adjusted',      value: fmtT(t.adjusted), cls:'text-gray-900' },
+    { label:'Actual Paid',   value: fmtT(t.paid),     cls:'text-green-700' },
+    { label:'Outstanding',   value: fmtT(t.balance),  cls: t.balance>0?'text-red-600':'text-gray-500' },
+  ].map(c => `
+    <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+      <p class="text-xs text-gray-400 uppercase tracking-wide">${c.label}</p>
+      <p class="text-xl font-bold mt-1 font-mono ${c.cls}">${c.value}</p>
+    </div>`).join('');
+
+  renderScheduleRows(period);
+
+  // notes
+  const noted = period.entries.filter(e => e.notes);
+  if (noted.length) {
+    $('schedule-notes').classList.remove('hidden');
+    $('schedule-notes').innerHTML = '<strong>Notes:</strong><ul class="mt-1 space-y-0.5">' +
+      noted.map(e => {
+        const emp = empById(e.employeeId);
+        return `<li><span class="font-medium">${emp?.name}:</span> ${e.notes}</li>`;
+      }).join('') + '</ul>';
+  } else {
+    $('schedule-notes').classList.add('hidden');
+  }
+}
+
+function renderScheduleRows(period) {
+  const t = periodTotals(period);
+
+  $('schedule-body').innerHTML = period.entries.map((entry, idx) => {
+    const emp = empById(entry.employeeId);
+    const balance = (entry.adjustedSalary ?? 0) - (entry.actualPaid ?? 0);
+    const isEditing = state.editingEntryId === entry.id;
+
+    if (isEditing) {
+      return `
+      <tr class="editing">
+        <td class="px-4 py-2 text-gray-400">${idx+1}</td>
+        <td class="px-4 py-2 font-medium">${emp?.name}</td>
+        <td class="px-4 py-2 text-gray-500">${emp?.position}</td>
+        <td class="px-4 py-2">
+          <input type="number" id="edit-salary" value="${entry.salary}" step="0.01" min="0"
+            class="w-24 border border-gray-300 rounded px-2 py-1 text-right text-xs" />
+        </td>
+        <td class="px-4 py-2">
+          <input type="number" id="edit-adj" value="${entry.adjustedSalary ?? ''}" step="0.01" min="0"
+            placeholder="–" class="w-24 border border-gray-300 rounded px-2 py-1 text-right text-xs" />
+        </td>
+        <td class="px-4 py-2">
+          <input type="number" id="edit-paid" value="${entry.actualPaid ?? ''}" step="0.01" min="0"
+            placeholder="–" class="w-24 border border-gray-300 rounded px-2 py-1 text-right text-xs" />
+        </td>
+        <td class="px-4 py-2 text-right text-gray-400 text-xs">–</td>
+        <td class="px-4 py-2 text-center no-print">
+          <button onclick="saveEntry(${entry.id})" class="text-green-700 hover:underline text-xs mr-2">Save</button>
+          <button onclick="cancelEdit()" class="text-gray-500 hover:underline text-xs">Cancel</button>
+        </td>
+      </tr>`;
+    }
+
+    const balClass = balance > 0 ? 'text-red-600' : balance < 0 ? 'text-orange-500' : 'text-gray-400';
+    return `
+    <tr class="hover:bg-blue-50 transition">
+      <td class="px-4 py-3 text-gray-400">${idx+1}</td>
+      <td class="px-4 py-3 font-medium">${emp?.name}</td>
+      <td class="px-4 py-3 text-gray-500">${emp?.position}</td>
+      <td class="px-4 py-3 text-right font-mono">${fmt(entry.salary)}</td>
+      <td class="px-4 py-3 text-right font-mono">${fmt(entry.adjustedSalary)}</td>
+      <td class="px-4 py-3 text-right font-mono text-green-700">${fmt(entry.actualPaid)}</td>
+      <td class="px-4 py-3 text-right font-mono ${balClass}">
+        ${entry.adjustedSalary != null ? fmt(balance) : '–'}
+      </td>
+      <td class="px-4 py-3 text-center no-print">
+        <button onclick="startEdit(${entry.id})" class="text-blue-600 hover:underline text-xs mr-2">Edit</button>
+        <button onclick="removeEntry(${entry.id})" class="text-red-500 hover:underline text-xs">Remove</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  $('schedule-foot').innerHTML = `
+    <tr class="bg-gray-50 font-semibold text-sm border-t-2 border-gray-300">
+      <td colspan="3" class="px-4 py-3 text-right uppercase tracking-wide text-gray-600">TOTAL</td>
+      <td class="px-4 py-3 text-right font-mono">${fmtT(t.salary)}</td>
+      <td class="px-4 py-3 text-right font-mono">${fmtT(t.adjusted)}</td>
+      <td class="px-4 py-3 text-right font-mono text-green-700">${fmtT(t.paid)}</td>
+      <td class="px-4 py-3 text-right font-mono ${t.balance>0?'text-red-600':'text-gray-500'}">${fmtT(t.balance)}</td>
+      <td class="no-print"></td>
+    </tr>`;
+}
+
+function startEdit(entryId) {
+  state.editingEntryId = entryId;
+  const period = state.periods.find(p => p.id === state.currentPeriodId);
+  renderScheduleRows(period);
+}
+
+function cancelEdit() {
+  state.editingEntryId = null;
+  const period = state.periods.find(p => p.id === state.currentPeriodId);
+  renderScheduleRows(period);
+}
+
+function saveEntry(entryId) {
+  const period = state.periods.find(p => p.id === state.currentPeriodId);
+  const entry = period.entries.find(e => e.id === entryId);
+  const sal  = parseFloat($('edit-salary').value);
+  const adj  = $('edit-adj').value  !== '' ? parseFloat($('edit-adj').value)  : null;
+  const paid = $('edit-paid').value !== '' ? parseFloat($('edit-paid').value) : null;
+  entry.salary         = isNaN(sal)  ? entry.salary  : sal;
+  entry.adjustedSalary = isNaN(adj)  ? null : adj;
+  entry.actualPaid     = isNaN(paid) ? null : paid;
+  state.editingEntryId = null;
+  renderSchedule();
+  renderDashboard(); // keep dashboard totals in sync
+}
+
+function removeEntry(entryId) {
+  if (!confirm('Remove this employee from the payroll?')) return;
+  const period = state.periods.find(p => p.id === state.currentPeriodId);
+  period.entries = period.entries.filter(e => e.id !== entryId);
+  renderSchedule();
+}
+
+// ── boot ─────────────────────────────────────────────────────────────
+showPage('dashboard');
+</script>
+</body>
+</html>
